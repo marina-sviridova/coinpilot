@@ -1,0 +1,31 @@
+package com.coinpilot.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Currency;
+
+
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Transaction {
+
+@Id @GeneratedValue
+Long id;
+TransactionType type;
+BigDecimal amount; /* или long в копейках*/
+Currency currency;
+LocalDateTime date;
+String category;
+String description;
+}

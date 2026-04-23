@@ -9,5 +9,4 @@ public class CoinpilotApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(CoinpilotApplication.class, args);
 	}
-
 }
