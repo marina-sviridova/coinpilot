@@ -3,11 +3,13 @@ package com.coinpilot.controller;
 import com.coinpilot.dto.TransactionPatchDTO;
 import com.coinpilot.dto.TransactionRequestDTO;
 import com.coinpilot.dto.TransactionResponseDTO;
+import com.coinpilot.model.TransactionType;
 import com.coinpilot.service.TransactionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -23,12 +25,6 @@ public class TransactionController {
     public ResponseEntity<TransactionResponseDTO> createTransaction(@RequestBody TransactionRequestDTO transactionRequestDTO) {
         TransactionResponseDTO createdTransaction = transactionService.createTransaction(transactionRequestDTO);
         return new ResponseEntity<>(createdTransaction, HttpStatus.CREATED);
-    }
-
-    @GetMapping("/transactions")
-    public ResponseEntity<List<TransactionResponseDTO>> getAllTransactions() {
-        List<TransactionResponseDTO> receivedTransactions = transactionService.getAllTransactions();
-        return new ResponseEntity<>(receivedTransactions, HttpStatus.OK);
     }
 
     @GetMapping("/transactions/{id}")
@@ -61,5 +57,22 @@ public class TransactionController {
         return transactionService.patchTransactionById(id, transactionPatchDTO)
                 .map(transactionResponseDTO -> new ResponseEntity<>(transactionResponseDTO, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @GetMapping("/transactions")
+    public ResponseEntity<List<TransactionResponseDTO>> getTransactions(
+            @RequestParam(required = false) TransactionType type,
+            @RequestParam(required = false) LocalDateTime start,
+            @RequestParam(required = false) LocalDateTime end) {
+
+        if (type != null && start != null && end != null) {
+            return new ResponseEntity<>(transactionService.findTransactionsByTypeAndDateBetween(type, start, end), HttpStatus.OK);
+        } else if (type != null) {
+            return new ResponseEntity<>(transactionService.findTransactionsByType(type), HttpStatus.OK);
+        } else if (start != null && end != null) {
+            return new ResponseEntity<>(transactionService.findTransactionsByDateBetween(start, end), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(transactionService.getAllTransactions(), HttpStatus.OK);
+        }
     }
 }

@@ -5,9 +5,11 @@ import com.coinpilot.dto.TransactionRequestDTO;
 import com.coinpilot.dto.TransactionResponseDTO;
 import com.coinpilot.mapper.TransactionMapper;
 import com.coinpilot.model.Transaction;
+import com.coinpilot.model.TransactionType;
 import com.coinpilot.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,5 +64,23 @@ public class TransactionService {
                 .map(transaction -> transactionMapper.transactionPatchDtoToTransaction(transactionPatchDTO, transaction))
                 .map(transaction -> transactionRepository.save(transaction))
                 .map(transaction -> transactionMapper.transactionToResponseDTO(transaction));
+    }
+
+    public List<TransactionResponseDTO> findTransactionsByType(TransactionType type) {
+        return transactionRepository.findByType(type).stream()
+                .map(transaction -> transactionMapper.transactionToResponseDTO(transaction))
+                .toList();
+    }
+
+    public List<TransactionResponseDTO> findTransactionsByDateBetween(LocalDateTime start, LocalDateTime end) {
+        return transactionRepository.findByDateBetween(start, end).stream()
+                .map(transaction -> transactionMapper.transactionToResponseDTO(transaction))
+                .toList();
+    }
+
+    public List<TransactionResponseDTO> findTransactionsByTypeAndDateBetween(TransactionType type, LocalDateTime start, LocalDateTime end) {
+        return transactionRepository.findByTypeAndDateBetween(type, start, end).stream()
+                .map(transaction -> transactionMapper.transactionToResponseDTO(transaction))
+                .toList();
     }
 }
