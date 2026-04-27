@@ -1,5 +1,6 @@
 package com.coinpilot.service;
 
+import com.coinpilot.dto.TransactionPatchDTO;
 import com.coinpilot.dto.TransactionRequestDTO;
 import com.coinpilot.dto.TransactionResponseDTO;
 import com.coinpilot.mapper.TransactionMapper;
@@ -54,5 +55,12 @@ public class TransactionService {
             transactionRepository.deleteById(id);
         }
         return isTransactionExists;
+    }
+
+    public Optional<TransactionResponseDTO> patchTransactionById(Long id, TransactionPatchDTO transactionPatchDTO) {
+        return transactionRepository.findById(id)
+                .map(transaction -> transactionMapper.transactionPatchDtoToTransaction(transactionPatchDTO, transaction))
+                .map(transaction -> transactionRepository.save(transaction))
+                .map(transaction -> transactionMapper.transactionToResponseDTO(transaction));
     }
 }

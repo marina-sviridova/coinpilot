@@ -1,5 +1,6 @@
 package com.coinpilot.controller;
 
+import com.coinpilot.dto.TransactionPatchDTO;
 import com.coinpilot.dto.TransactionRequestDTO;
 import com.coinpilot.dto.TransactionResponseDTO;
 import com.coinpilot.service.TransactionService;
@@ -52,5 +53,13 @@ public class TransactionController {
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+
+    @PatchMapping("/transactions/{id}")
+    public ResponseEntity<TransactionResponseDTO> patchTransactionById(@PathVariable Long id,
+                                                                       @RequestBody TransactionPatchDTO transactionPatchDTO) {
+        return transactionService.patchTransactionById(id, transactionPatchDTO)
+                .map(transactionResponseDTO -> new ResponseEntity<>(transactionResponseDTO, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 }
