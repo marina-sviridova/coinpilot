@@ -1,5 +1,6 @@
 package com.coinpilot.controller;
 
+import com.coinpilot.dto.CategorySumDTO;
 import com.coinpilot.dto.TransactionPatchDTO;
 import com.coinpilot.dto.TransactionRequestDTO;
 import com.coinpilot.dto.TransactionResponseDTO;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -74,5 +76,26 @@ public class TransactionController {
         } else {
             return new ResponseEntity<>(transactionService.getAllTransactions(), HttpStatus.OK);
         }
+    }
+
+    @GetMapping("/transactions/summary/total")
+    public ResponseEntity<BigDecimal> getSumByTypeAndDateBetween(@RequestParam TransactionType type,
+                                                                 @RequestParam LocalDateTime start,
+                                                                 @RequestParam LocalDateTime end) {
+        return new ResponseEntity<>(transactionService.getSumByTypeAndDateBetween(type, start, end), HttpStatus.OK);
+    }
+
+    @GetMapping("/transactions/summary/balance")
+    public ResponseEntity<BigDecimal> getBalanceByDateBetween(@RequestParam LocalDateTime start,
+                                                              @RequestParam LocalDateTime end) {
+        return new ResponseEntity<>(transactionService.getBalanceByDateBetween(start, end), HttpStatus.OK);
+    }
+
+    @GetMapping("/transactions/summary/categories")
+    public ResponseEntity<List<CategorySumDTO>> getSumByCategoriesAndDateBetween(@RequestParam TransactionType type,
+                                                                                 @RequestParam LocalDateTime start,
+                                                                                 @RequestParam LocalDateTime end) {
+        return new ResponseEntity<>(transactionService.getSumByCategoriesAndDateBetween(type, start, end), HttpStatus.OK);
+
     }
 }
