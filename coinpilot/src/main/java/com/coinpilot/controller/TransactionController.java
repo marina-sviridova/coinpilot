@@ -31,9 +31,9 @@ public class TransactionController {
 
     @GetMapping("/transactions/{id}")
     public ResponseEntity<TransactionResponseDTO> getTransactionById(@PathVariable Long id) {
-        return transactionService.getTransactionById(id).
-                map(transaction -> new ResponseEntity<>(transaction, HttpStatus.OK)).
-                orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return transactionService.getTransactionById(id)
+                .map(transaction -> new ResponseEntity<>(transaction, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PutMapping("/transactions/{id}")

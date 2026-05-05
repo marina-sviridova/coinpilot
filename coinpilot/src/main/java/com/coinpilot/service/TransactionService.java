@@ -4,10 +4,13 @@ import com.coinpilot.dto.CategorySumDTO;
 import com.coinpilot.dto.TransactionPatchDTO;
 import com.coinpilot.dto.TransactionRequestDTO;
 import com.coinpilot.dto.TransactionResponseDTO;
+import com.coinpilot.exception.WalletNotFoundException;
 import com.coinpilot.mapper.TransactionMapper;
 import com.coinpilot.model.Transaction;
 import com.coinpilot.model.TransactionType;
+import com.coinpilot.model.Wallet;
 import com.coinpilot.repository.TransactionRepository;
+import com.coinpilot.repository.WalletRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -20,15 +23,21 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
+    private final WalletRepository walletRepository;
 
-    public TransactionService(TransactionRepository transactionRepository, TransactionMapper transactionMapper) {
+    public TransactionService(TransactionRepository transactionRepository,
+                              TransactionMapper transactionMapper,
+                              WalletRepository walletRepository) {
         this.transactionRepository = transactionRepository;
         this.transactionMapper = transactionMapper;
+        this.walletRepository = walletRepository;
     }
 
     public TransactionResponseDTO createTransaction(TransactionRequestDTO transactionRequestDTO) {
-        return transactionMapper.transactionToResponseDTO(transactionRepository
-                .save(transactionMapper.requestDTOtoTransaction(transactionRequestDTO)));
+        Wallet wallet = walletRepository.findById(transactionRequestDTO.getWalletId())
+                .orElseThrow(() -> new WalletNotFoundException(transactionRequestDTO.getWalletId()));
+        return transactionMapper.transactionToResponseDTO(transactionRepository.save(
+                transactionMapper.requestDTOtoTransaction(transactionRequestDTO, wallet)));
     }
 
     public List<TransactionResponseDTO> getAllTransactions() {
@@ -44,8 +53,10 @@ public class TransactionService {
     }
 
     public Optional<TransactionResponseDTO> updateTransactionById(Long id, TransactionRequestDTO transactionRequestDTO) {
+        Wallet wallet = walletRepository.findById(transactionRequestDTO.getWalletId())
+                .orElseThrow(() -> new WalletNotFoundException(transactionRequestDTO.getWalletId()));
         if (transactionRepository.existsById(id)) {
-            Transaction updatedTransaction = transactionMapper.requestDTOtoTransaction(transactionRequestDTO);
+            Transaction updatedTransaction = transactionMapper.requestDTOtoTransaction(transactionRequestDTO, wallet);
             updatedTransaction.setId(id);
             return Optional.of(transactionMapper.transactionToResponseDTO(transactionRepository.save(updatedTransaction)));
         } else {
@@ -55,15 +66,19 @@ public class TransactionService {
 
     public boolean deleteTransactionById(Long id) {
         boolean isTransactionExists = transactionRepository.existsById(id);
-        if(isTransactionExists) {
+        if (isTransactionExists) {
             transactionRepository.deleteById(id);
         }
         return isTransactionExists;
     }
 
     public Optional<TransactionResponseDTO> patchTransactionById(Long id, TransactionPatchDTO transactionPatchDTO) {
+        // Найти wallet только если walletId передан
+        Optional<Wallet> wallet = transactionPatchDTO.getWalletId()
+                .map(walletId -> walletRepository.findById(walletId)
+                        .orElseThrow(() -> new WalletNotFoundException(walletId)));
         return transactionRepository.findById(id)
-                .map(transaction -> transactionMapper.transactionPatchDtoToTransaction(transactionPatchDTO, transaction))
+                .map(transaction -> transactionMapper.transactionPatchDtoToTransaction(transactionPatchDTO, transaction, wallet))
                 .map(transaction -> transactionRepository.save(transaction))
                 .map(transaction -> transactionMapper.transactionToResponseDTO(transaction));
     }
@@ -92,7 +107,7 @@ public class TransactionService {
     }
 
     public BigDecimal getBalanceByDateBetween(LocalDateTime start, LocalDateTime end) {
-        BigDecimal income = Optional.ofNullable(transactionRepository.sumByTypeAndDateBetween(TransactionType.INCOME, start, end ))
+        BigDecimal income = Optional.ofNullable(transactionRepository.sumByTypeAndDateBetween(TransactionType.INCOME, start, end))
                 .orElse(BigDecimal.ZERO);
         BigDecimal expense = Optional.ofNullable(transactionRepository.sumByTypeAndDateBetween(TransactionType.EXPENSE, start, end))
                 .orElse(BigDecimal.ZERO);

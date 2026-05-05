@@ -4,13 +4,17 @@ import com.coinpilot.dto.TransactionPatchDTO;
 import com.coinpilot.dto.TransactionRequestDTO;
 import com.coinpilot.dto.TransactionResponseDTO;
 import com.coinpilot.model.Transaction;
+import com.coinpilot.model.Wallet;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 public class TransactionMapper {
 
-    public Transaction requestDTOtoTransaction(TransactionRequestDTO requestDTO) {
+    public Transaction requestDTOtoTransaction(TransactionRequestDTO requestDTO, Wallet wallet) {
         return Transaction.builder()
+                .wallet(wallet)
                 .type(requestDTO.getType())
                 .amount(requestDTO.getAmount())
                 .currency(requestDTO.getCurrency())
@@ -23,6 +27,7 @@ public class TransactionMapper {
     public TransactionResponseDTO transactionToResponseDTO(Transaction transaction) {
         return TransactionResponseDTO.builder()
                 .id(transaction.getId())
+                .walletId(transaction.getWallet() != null ? transaction.getWallet().getId() : null)
                 .type(transaction.getType())
                 .amount(transaction.getAmount())
                 .currency(transaction.getCurrency())
@@ -32,8 +37,10 @@ public class TransactionMapper {
                 .build();
     }
 
-    public Transaction transactionPatchDtoToTransaction(TransactionPatchDTO transactionPatchDTO, Transaction transaction) {
-
+    public Transaction transactionPatchDtoToTransaction(TransactionPatchDTO transactionPatchDTO,
+                                                        Transaction transaction,
+                                                        Optional<Wallet> wallet) {
+        wallet.ifPresent(w -> transaction.setWallet(w));
         transactionPatchDTO.getType()
                 .ifPresent(transactionType -> transaction.setType(transactionType));
         transactionPatchDTO.getAmount()

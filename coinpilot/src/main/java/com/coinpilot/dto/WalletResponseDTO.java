@@ -1,27 +1,24 @@
 package com.coinpilot.dto;
 
-import com.coinpilot.model.TransactionType;
+import com.coinpilot.model.WalletType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Currency;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TransactionResponseDTO {
+public class WalletResponseDTO {
 
     Long id;
-    Long walletId;
-    TransactionType type;
-    BigDecimal amount;
+    String name;
+    WalletType walletType;
     Currency currency;
-    LocalDateTime date;
-    String category;
+    BigDecimal balance;
     String description;
 }

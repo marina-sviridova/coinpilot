@@ -1,27 +1,29 @@
-package com.coinpilot.dto;
+package com.coinpilot.model;
 
-import com.coinpilot.model.TransactionType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Currency;
 
 @Data
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TransactionResponseDTO {
+public class Wallet {
 
+    @Id
+    @GeneratedValue
     Long id;
-    Long walletId;
-    TransactionType type;
-    BigDecimal amount;
+    String name;
+    WalletType walletType;
     Currency currency;
-    LocalDateTime date;
-    String category;
+    BigDecimal balance;
     String description;
 }
