@@ -31,34 +31,25 @@ public class TransactionController {
 
     @GetMapping("/transactions/{id}")
     public ResponseEntity<TransactionResponseDTO> getTransactionById(@PathVariable Long id) {
-        return transactionService.getTransactionById(id)
-                .map(transaction -> new ResponseEntity<>(transaction, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return new ResponseEntity<>(transactionService.getTransactionById(id), HttpStatus.OK);
     }
 
     @PutMapping("/transactions/{id}")
     public ResponseEntity<TransactionResponseDTO> updateTransactionById(@PathVariable Long id,
                                                                   @RequestBody TransactionRequestDTO transactionRequestDTO) {
-        return transactionService.updateTransactionById(id, transactionRequestDTO)
-                .map(transactionResponseDTO -> new ResponseEntity<>(transactionResponseDTO, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return new ResponseEntity<>(transactionService.updateTransactionById(id, transactionRequestDTO), HttpStatus.OK);
     }
 
     @DeleteMapping("/transactions/{id}")
     public ResponseEntity<Void> deleteTransactionById(@PathVariable Long id) {
-        if (transactionService.deleteTransactionById(id)) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        transactionService.deleteTransactionById(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PatchMapping("/transactions/{id}")
     public ResponseEntity<TransactionResponseDTO> patchTransactionById(@PathVariable Long id,
                                                                        @RequestBody TransactionPatchDTO transactionPatchDTO) {
-        return transactionService.patchTransactionById(id, transactionPatchDTO)
-                .map(transactionResponseDTO -> new ResponseEntity<>(transactionResponseDTO, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return new ResponseEntity<>(transactionService.patchTransactionById(id, transactionPatchDTO), HttpStatus.OK);
     }
 
     @GetMapping("/transactions")
@@ -96,6 +87,5 @@ public class TransactionController {
                                                                                  @RequestParam LocalDateTime start,
                                                                                  @RequestParam LocalDateTime end) {
         return new ResponseEntity<>(transactionService.getSumByCategoriesAndDateBetween(type, start, end), HttpStatus.OK);
-
     }
 }

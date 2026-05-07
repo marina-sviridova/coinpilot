@@ -4,6 +4,8 @@ import com.coinpilot.dto.CategorySumDTO;
 import com.coinpilot.dto.TransactionPatchDTO;
 import com.coinpilot.dto.TransactionRequestDTO;
 import com.coinpilot.dto.TransactionResponseDTO;
+import com.coinpilot.exception.CurrencyMismatchException;
+import com.coinpilot.exception.TransactionNotFoundException;
 import com.coinpilot.exception.WalletNotFoundException;
 import com.coinpilot.mapper.TransactionMapper;
 import com.coinpilot.model.Transaction;
@@ -11,6 +13,7 @@ import com.coinpilot.model.TransactionType;
 import com.coinpilot.model.Wallet;
 import com.coinpilot.repository.TransactionRepository;
 import com.coinpilot.repository.WalletRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -33,11 +36,22 @@ public class TransactionService {
         this.walletRepository = walletRepository;
     }
 
+    @Transactional
     public TransactionResponseDTO createTransaction(TransactionRequestDTO transactionRequestDTO) {
         Wallet wallet = walletRepository.findById(transactionRequestDTO.getWalletId())
                 .orElseThrow(() -> new WalletNotFoundException(transactionRequestDTO.getWalletId()));
-        return transactionMapper.transactionToResponseDTO(transactionRepository.save(
+        if (!wallet.getCurrency().equals(transactionRequestDTO.getCurrency())) {
+            throw new CurrencyMismatchException(wallet.getCurrency(), transactionRequestDTO.getCurrency());
+        }
+        if (transactionRequestDTO.getType().equals(TransactionType.EXPENSE)) {
+            wallet.setBalance(wallet.getBalance().subtract(transactionRequestDTO.getAmount()));
+        } else {
+            wallet.setBalance(wallet.getBalance().add(transactionRequestDTO.getAmount()));
+        }
+        TransactionResponseDTO transactionResponseDTO = transactionMapper.transactionToResponseDTO(transactionRepository.save(
                 transactionMapper.requestDTOtoTransaction(transactionRequestDTO, wallet)));
+        walletRepository.save(wallet);
+        return transactionResponseDTO;
     }
 
     public List<TransactionResponseDTO> getAllTransactions() {
@@ -47,40 +61,82 @@ public class TransactionService {
                 .toList();
     }
 
-    public Optional<TransactionResponseDTO> getTransactionById(Long id) {
-        return transactionRepository.findById(id)
-                .map(transactionMapper::transactionToResponseDTO);
+    public TransactionResponseDTO getTransactionById(Long id) {
+        return transactionMapper.transactionToResponseDTO(transactionRepository.findById(id)
+                .orElseThrow(() -> new TransactionNotFoundException(id)));
     }
 
-    public Optional<TransactionResponseDTO> updateTransactionById(Long id, TransactionRequestDTO transactionRequestDTO) {
+    @Transactional
+    public TransactionResponseDTO updateTransactionById(Long id, TransactionRequestDTO transactionRequestDTO) {
         Wallet wallet = walletRepository.findById(transactionRequestDTO.getWalletId())
                 .orElseThrow(() -> new WalletNotFoundException(transactionRequestDTO.getWalletId()));
-        if (transactionRepository.existsById(id)) {
-            Transaction updatedTransaction = transactionMapper.requestDTOtoTransaction(transactionRequestDTO, wallet);
-            updatedTransaction.setId(id);
-            return Optional.of(transactionMapper.transactionToResponseDTO(transactionRepository.save(updatedTransaction)));
+        if (!wallet.getCurrency().equals(transactionRequestDTO.getCurrency())) {
+            throw new CurrencyMismatchException(wallet.getCurrency(), transactionRequestDTO.getCurrency());
+        }
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new TransactionNotFoundException(id));
+        if (transaction.getType().equals(TransactionType.EXPENSE)) {
+            wallet.setBalance(wallet.getBalance().add(transaction.getAmount()));
         } else {
-            return Optional.empty();
+            wallet.setBalance(wallet.getBalance().subtract(transaction.getAmount()));
         }
+        Transaction updatedTransaction = transactionMapper.requestDTOtoTransaction(transactionRequestDTO, wallet);
+        updatedTransaction.setId(id);
+        if (updatedTransaction.getType().equals(TransactionType.EXPENSE)) {
+            wallet.setBalance(wallet.getBalance().subtract(updatedTransaction.getAmount()));
+        } else {
+            wallet.setBalance(wallet.getBalance().add(updatedTransaction.getAmount()));
+        }
+        walletRepository.save(wallet);
+        return transactionMapper.transactionToResponseDTO(transactionRepository.save(updatedTransaction));
     }
 
-    public boolean deleteTransactionById(Long id) {
-        boolean isTransactionExists = transactionRepository.existsById(id);
-        if (isTransactionExists) {
-            transactionRepository.deleteById(id);
+    @Transactional
+    public void deleteTransactionById(Long id) {
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new TransactionNotFoundException(id));
+        Wallet wallet = walletRepository.findById(transaction.getWallet().getId())
+                .orElseThrow(() -> new WalletNotFoundException(transaction.getWallet().getId()));
+        if (transaction.getType().equals(TransactionType.EXPENSE)) {
+            wallet.setBalance(wallet.getBalance().add(transaction.getAmount()));
+        } else {
+            wallet.setBalance(wallet.getBalance().subtract(transaction.getAmount()));
         }
-        return isTransactionExists;
+        walletRepository.save(wallet);
+        transactionRepository.deleteById(id);
     }
 
-    public Optional<TransactionResponseDTO> patchTransactionById(Long id, TransactionPatchDTO transactionPatchDTO) {
-        // Найти wallet только если walletId передан
-        Optional<Wallet> wallet = transactionPatchDTO.getWalletId()
+    @Transactional
+    public TransactionResponseDTO patchTransactionById(Long id, TransactionPatchDTO transactionPatchDTO) {
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new TransactionNotFoundException(id));
+        Wallet wallet = walletRepository.findById(transaction.getWallet().getId())
+                .orElseThrow(() -> new WalletNotFoundException(transaction.getWallet().getId()));
+        if (transaction.getType().equals(TransactionType.EXPENSE)) {
+            wallet.setBalance(wallet.getBalance().add(transaction.getAmount()));
+        } else {
+            wallet.setBalance(wallet.getBalance().subtract(transaction.getAmount()));
+        }
+        Wallet targetWallet = transactionPatchDTO.getWalletId()
+                .filter(walletId -> !walletId.equals(transaction.getWallet().getId()))
                 .map(walletId -> walletRepository.findById(walletId)
-                        .orElseThrow(() -> new WalletNotFoundException(walletId)));
-        return transactionRepository.findById(id)
-                .map(transaction -> transactionMapper.transactionPatchDtoToTransaction(transactionPatchDTO, transaction, wallet))
-                .map(transaction -> transactionRepository.save(transaction))
-                .map(transaction -> transactionMapper.transactionToResponseDTO(transaction));
+                        .orElseThrow(() -> new WalletNotFoundException(walletId)))
+                .orElse(wallet);
+        Transaction patchedTransaction = transactionMapper
+                .transactionPatchDtoToTransaction(transactionPatchDTO, transaction, targetWallet);
+        if (!targetWallet.getCurrency().equals(patchedTransaction.getCurrency())) {
+            throw new CurrencyMismatchException(targetWallet.getCurrency(), patchedTransaction.getCurrency());
+        }
+        if (patchedTransaction.getType().equals(TransactionType.EXPENSE)) {
+            targetWallet.setBalance(targetWallet.getBalance().subtract(patchedTransaction.getAmount()));
+        } else {
+            targetWallet.setBalance(targetWallet.getBalance().add(patchedTransaction.getAmount()));
+        }
+        walletRepository.save(wallet);
+        if (!wallet.equals(targetWallet)) {
+            walletRepository.save(targetWallet);
+        }
+        return transactionMapper.transactionToResponseDTO(transactionRepository.save(patchedTransaction));
     }
 
     public List<TransactionResponseDTO> findTransactionsByType(TransactionType type) {

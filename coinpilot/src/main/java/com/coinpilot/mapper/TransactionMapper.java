@@ -39,8 +39,8 @@ public class TransactionMapper {
 
     public Transaction transactionPatchDtoToTransaction(TransactionPatchDTO transactionPatchDTO,
                                                         Transaction transaction,
-                                                        Optional<Wallet> wallet) {
-        wallet.ifPresent(w -> transaction.setWallet(w));
+                                                        Wallet wallet) {
+        transaction.setWallet(wallet);
         transactionPatchDTO.getType()
                 .ifPresent(transactionType -> transaction.setType(transactionType));
         transactionPatchDTO.getAmount()

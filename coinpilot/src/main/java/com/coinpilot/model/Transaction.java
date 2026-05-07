@@ -27,7 +27,7 @@ public class Transaction {
     @ManyToOne
     Wallet wallet;
     TransactionType type;
-    BigDecimal amount; /* или long в копейках*/
+    BigDecimal amount;
     Currency currency;
     LocalDateTime date;
     String category;
