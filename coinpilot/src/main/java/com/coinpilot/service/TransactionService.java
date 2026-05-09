@@ -5,6 +5,7 @@ import com.coinpilot.dto.TransactionPatchDTO;
 import com.coinpilot.dto.TransactionRequestDTO;
 import com.coinpilot.dto.TransactionResponseDTO;
 import com.coinpilot.exception.CurrencyMismatchException;
+import com.coinpilot.exception.InsufficientFundsException;
 import com.coinpilot.exception.TransactionNotFoundException;
 import com.coinpilot.exception.WalletNotFoundException;
 import com.coinpilot.mapper.TransactionMapper;
@@ -44,6 +45,9 @@ public class TransactionService {
             throw new CurrencyMismatchException(wallet.getCurrency(), transactionRequestDTO.getCurrency());
         }
         if (transactionRequestDTO.getType().equals(TransactionType.EXPENSE)) {
+            if (wallet.getBalance().compareTo(transactionRequestDTO.getAmount()) < 0) {
+                throw new InsufficientFundsException(wallet.getBalance(), transactionRequestDTO.getAmount());
+            }
             wallet.setBalance(wallet.getBalance().subtract(transactionRequestDTO.getAmount()));
         } else {
             wallet.setBalance(wallet.getBalance().add(transactionRequestDTO.getAmount()));
@@ -83,6 +87,9 @@ public class TransactionService {
         Transaction updatedTransaction = transactionMapper.requestDTOtoTransaction(transactionRequestDTO, wallet);
         updatedTransaction.setId(id);
         if (updatedTransaction.getType().equals(TransactionType.EXPENSE)) {
+            if (wallet.getBalance().compareTo(transactionRequestDTO.getAmount()) < 0) {
+                throw new InsufficientFundsException(wallet.getBalance(), transactionRequestDTO.getAmount());
+            }
             wallet.setBalance(wallet.getBalance().subtract(updatedTransaction.getAmount()));
         } else {
             wallet.setBalance(wallet.getBalance().add(updatedTransaction.getAmount()));
@@ -100,6 +107,9 @@ public class TransactionService {
         if (transaction.getType().equals(TransactionType.EXPENSE)) {
             wallet.setBalance(wallet.getBalance().add(transaction.getAmount()));
         } else {
+            if (wallet.getBalance().compareTo(transaction.getAmount()) < 0) {
+                throw new InsufficientFundsException(wallet.getBalance(), transaction.getAmount());
+            }
             wallet.setBalance(wallet.getBalance().subtract(transaction.getAmount()));
         }
         walletRepository.save(wallet);
@@ -128,6 +138,9 @@ public class TransactionService {
             throw new CurrencyMismatchException(targetWallet.getCurrency(), patchedTransaction.getCurrency());
         }
         if (patchedTransaction.getType().equals(TransactionType.EXPENSE)) {
+            if (targetWallet.getBalance().compareTo(patchedTransaction.getAmount()) < 0) {
+                throw new InsufficientFundsException(targetWallet.getBalance(), patchedTransaction.getAmount());
+            }
             targetWallet.setBalance(targetWallet.getBalance().subtract(patchedTransaction.getAmount()));
         } else {
             targetWallet.setBalance(targetWallet.getBalance().add(patchedTransaction.getAmount()));
