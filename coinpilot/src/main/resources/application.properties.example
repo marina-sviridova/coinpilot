@@ -1,7 +1,7 @@
 spring.application.name=coinpilot
 spring.datasource.url=jdbc:postgresql://localhost:5432/coinpilot
 spring.datasource.username=postgres
-spring.datasource.password=666999
+spring.datasource.password=YOUR_PASSWORD_HERE
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 spring.jpa.hibernate.ddl-auto=create

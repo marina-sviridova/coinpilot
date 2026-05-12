@@ -30,6 +30,7 @@ public class Transaction {
     BigDecimal amount;
     Currency currency;
     LocalDateTime date;
+    // Valid values defined in IncomeCategory and ExpenseCategory enums
     String category;
     String description;
 }

@@ -52,10 +52,9 @@ public class TransactionService {
         } else {
             wallet.setBalance(wallet.getBalance().add(transactionRequestDTO.getAmount()));
         }
-        TransactionResponseDTO transactionResponseDTO = transactionMapper.transactionToResponseDTO(transactionRepository.save(
-                transactionMapper.requestDTOtoTransaction(transactionRequestDTO, wallet)));
         walletRepository.save(wallet);
-        return transactionResponseDTO;
+        return transactionMapper.transactionToResponseDTO(transactionRepository.save(
+                transactionMapper.requestDTOtoTransaction(transactionRequestDTO, wallet)));
     }
 
     public List<TransactionResponseDTO> getAllTransactions() {
@@ -72,29 +71,33 @@ public class TransactionService {
 
     @Transactional
     public TransactionResponseDTO updateTransactionById(Long id, TransactionRequestDTO transactionRequestDTO) {
-        Wallet wallet = walletRepository.findById(transactionRequestDTO.getWalletId())
-                .orElseThrow(() -> new WalletNotFoundException(transactionRequestDTO.getWalletId()));
-        if (!wallet.getCurrency().equals(transactionRequestDTO.getCurrency())) {
-            throw new CurrencyMismatchException(wallet.getCurrency(), transactionRequestDTO.getCurrency());
-        }
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new TransactionNotFoundException(id));
-        if (transaction.getType().equals(TransactionType.EXPENSE)) {
-            wallet.setBalance(wallet.getBalance().add(transaction.getAmount()));
-        } else {
-            wallet.setBalance(wallet.getBalance().subtract(transaction.getAmount()));
+        Wallet oldWallet = transaction.getWallet();
+        Wallet newWallet = walletRepository.findById(transactionRequestDTO.getWalletId())
+                .orElseThrow(() -> new WalletNotFoundException(transactionRequestDTO.getWalletId()));
+        if (!newWallet.getCurrency().equals(transactionRequestDTO.getCurrency())) {
+            throw new CurrencyMismatchException(newWallet.getCurrency(), transactionRequestDTO.getCurrency());
         }
-        Transaction updatedTransaction = transactionMapper.requestDTOtoTransaction(transactionRequestDTO, wallet);
+        if (transaction.getType().equals(TransactionType.EXPENSE)) {
+            oldWallet.setBalance(oldWallet.getBalance().add(transaction.getAmount()));
+        } else {
+            oldWallet.setBalance(oldWallet.getBalance().subtract(transaction.getAmount()));
+        }
+        Transaction updatedTransaction = transactionMapper.requestDTOtoTransaction(transactionRequestDTO, newWallet);
         updatedTransaction.setId(id);
         if (updatedTransaction.getType().equals(TransactionType.EXPENSE)) {
-            if (wallet.getBalance().compareTo(transactionRequestDTO.getAmount()) < 0) {
-                throw new InsufficientFundsException(wallet.getBalance(), transactionRequestDTO.getAmount());
+            if (newWallet.getBalance().compareTo(transactionRequestDTO.getAmount()) < 0) {
+                throw new InsufficientFundsException(newWallet.getBalance(), transactionRequestDTO.getAmount());
             }
-            wallet.setBalance(wallet.getBalance().subtract(updatedTransaction.getAmount()));
+            newWallet.setBalance(newWallet.getBalance().subtract(updatedTransaction.getAmount()));
         } else {
-            wallet.setBalance(wallet.getBalance().add(updatedTransaction.getAmount()));
+            newWallet.setBalance(newWallet.getBalance().add(updatedTransaction.getAmount()));
         }
-        walletRepository.save(wallet);
+        walletRepository.save(oldWallet);
+        if (!oldWallet.equals(newWallet)) {
+            walletRepository.save(newWallet);
+        }
         return transactionMapper.transactionToResponseDTO(transactionRepository.save(updatedTransaction));
     }
 

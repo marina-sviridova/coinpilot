@@ -1,7 +1,6 @@
 package com.coinpilot.dto;
 
 import com.coinpilot.model.TransactionType;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,7 +13,6 @@ import java.util.Optional;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonDeserialize
 public class TransactionPatchDTO {
 
     Optional<Long> walletId = Optional.empty();

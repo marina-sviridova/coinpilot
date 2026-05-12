@@ -18,7 +18,6 @@ public class WalletMapper {
                 .build();
     }
 
-
     public WalletResponseDTO walletToResponseDto(Wallet wallet) {
         return WalletResponseDTO.builder()
                 .id(wallet.getId())

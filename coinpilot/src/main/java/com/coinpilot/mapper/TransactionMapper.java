@@ -7,8 +7,6 @@ import com.coinpilot.model.Transaction;
 import com.coinpilot.model.Wallet;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
 @Component
 public class TransactionMapper {
 
