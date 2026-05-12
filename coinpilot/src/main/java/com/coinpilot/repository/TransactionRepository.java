@@ -15,11 +15,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findByDateBetween(LocalDateTime start, LocalDateTime end);
     List<Transaction> findByTypeAndDateBetween(TransactionType type, LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT SUM(t.amount) FROM Transaction t WHERE t.type = :type AND t.date >= :start AND t.date <= :end")
+    @Query("SELECT SUM(t.amount) " +
+            "FROM Transaction t " +
+            "WHERE t.type = :type " +
+            "AND t.date >= :start " +
+            "AND t.date <= :end")
     BigDecimal sumByTypeAndDateBetween(TransactionType type, LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT new com.coinpilot.dto.CategorySumDTO (t.category, SUM(t.amount)) FROM Transaction t " +
-            "WHERE t.type = :type AND t.date >= :start AND t.date <= :end AND t.category IS NOT NULL " +
+    @Query("SELECT new com.coinpilot.dto.CategorySumDTO (t.category, SUM(t.amount)) " +
+            "FROM Transaction t " +
+            "WHERE t.type = :type " +
+            "AND t.date >= :start " +
+            "AND t.date <= :end " +
+            "AND t.category IS NOT NULL " +
             "GROUP BY t.category")
     List<CategorySumDTO> sumByCategoriesAndDateBetween(TransactionType type, LocalDateTime start, LocalDateTime end);
+    List<Transaction> findByWalletId(Long walletId);
 }

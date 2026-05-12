@@ -186,4 +186,10 @@ public class TransactionService {
     public List<CategorySumDTO> getSumByCategoriesAndDateBetween(TransactionType type, LocalDateTime start, LocalDateTime end) {
         return transactionRepository.sumByCategoriesAndDateBetween(type, start, end);
     }
+
+    public List<TransactionResponseDTO> getTransactionsByWalletId(Long walletId) {
+        return transactionRepository.findByWalletId(walletId).stream()
+                .map(transaction -> transactionMapper.transactionToResponseDTO(transaction))
+                .toList();
+    }
 }
