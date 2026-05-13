@@ -32,6 +32,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
+    @ExceptionHandler(CurrencyChangeNotAllowedException.class)
+    public ResponseEntity<ErrorResponse> handleCurrencyChange(CurrencyChangeNotAllowedException e) {
+        ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value());
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception e) {
         ErrorResponse errorResponse = new ErrorResponse("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR.value());

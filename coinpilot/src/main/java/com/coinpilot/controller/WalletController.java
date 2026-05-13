@@ -1,6 +1,7 @@
 package com.coinpilot.controller;
 
 import com.coinpilot.dto.TransactionResponseDTO;
+import com.coinpilot.dto.WalletPatchDTO;
 import com.coinpilot.dto.WalletRequestDTO;
 import com.coinpilot.dto.WalletResponseDTO;
 import com.coinpilot.service.TransactionService;
@@ -35,7 +36,8 @@ public class WalletController {
     }
 
     @PutMapping("/wallets/{id}")
-    public ResponseEntity<WalletResponseDTO> updateWalletById(@PathVariable Long id, @Valid @RequestBody WalletRequestDTO walletRequestDTO) {
+    public ResponseEntity<WalletResponseDTO> updateWalletById(@PathVariable Long id,
+                                                              @Valid @RequestBody WalletRequestDTO walletRequestDTO) {
         return new ResponseEntity<>(walletService.updateWalletById(id, walletRequestDTO), HttpStatus.OK);
     }
 
@@ -53,5 +55,11 @@ public class WalletController {
     @GetMapping("/wallets/{id}/transactions")
     public ResponseEntity<List<TransactionResponseDTO>> getTransactionsByWallet(@PathVariable Long id) {
         return new ResponseEntity<>(transactionService.getTransactionsByWalletId(id), HttpStatus.OK);
+    }
+
+    @PatchMapping("/wallets/{id}")
+    public ResponseEntity<WalletResponseDTO> patchWalletById(@PathVariable Long id,
+                                                             @RequestBody WalletPatchDTO walletPatchDTO) {
+        return new ResponseEntity<>(walletService.patchWalletById(id, walletPatchDTO), HttpStatus.OK);
     }
 }

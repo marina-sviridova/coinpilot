@@ -1,5 +1,6 @@
 package com.coinpilot.mapper;
 
+import com.coinpilot.dto.WalletPatchDTO;
 import com.coinpilot.dto.WalletRequestDTO;
 import com.coinpilot.dto.WalletResponseDTO;
 import com.coinpilot.model.Wallet;
@@ -27,5 +28,17 @@ public class WalletMapper {
                 .balance(wallet.getBalance())
                 .description(wallet.getDescription())
                 .build();
+    }
+
+    public Wallet walletPatchDtoToWallet(WalletPatchDTO walletPatchDTO, Wallet wallet) {
+        walletPatchDTO.getName()
+                .ifPresent(name -> wallet.setName(name));
+        walletPatchDTO.getWalletType()
+                .ifPresent(walletType -> wallet.setWalletType(walletType));
+        walletPatchDTO.getBalance()
+                .ifPresent(balance -> wallet.setBalance(balance));
+        walletPatchDTO.getDescription()
+                .ifPresent(description -> wallet.setDescription(description));
+        return wallet;
     }
 }

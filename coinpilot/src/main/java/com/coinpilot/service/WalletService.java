@@ -1,7 +1,9 @@
 package com.coinpilot.service;
 
+import com.coinpilot.dto.WalletPatchDTO;
 import com.coinpilot.dto.WalletRequestDTO;
 import com.coinpilot.dto.WalletResponseDTO;
+import com.coinpilot.exception.CurrencyChangeNotAllowedException;
 import com.coinpilot.exception.WalletNotFoundException;
 import com.coinpilot.mapper.WalletMapper;
 import com.coinpilot.model.Wallet;
@@ -38,6 +40,18 @@ public class WalletService {
         Wallet updatedWallet = walletMapper.requestDtoToWallet(walletRequestDTO);
         updatedWallet.setId(id);
         return walletMapper.walletToResponseDto(walletRepository.save(updatedWallet));
+    }
+
+    public WalletResponseDTO patchWalletById(Long id, WalletPatchDTO walletPatchDTO) {
+        Wallet wallet = walletRepository.findById(id)
+                .orElseThrow(() -> new WalletNotFoundException(id));
+        walletPatchDTO.getCurrency().ifPresent(newCurrency -> {
+            if (!wallet.getCurrency().equals(newCurrency)) {
+                throw new CurrencyChangeNotAllowedException(wallet.getCurrency(), newCurrency);
+            }
+        });
+        Wallet patchedWallet = walletMapper.walletPatchDtoToWallet(walletPatchDTO, wallet);
+        return walletMapper.walletToResponseDto(walletRepository.save(patchedWallet));
     }
 
     public void deleteWalletById(Long id) {
