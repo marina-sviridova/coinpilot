@@ -1,8 +1,6 @@
 package com.coinpilot.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,11 +15,11 @@ import java.util.Currency;
 @AllArgsConstructor
 @Builder
 public class Wallet {
-
     @Id
     @GeneratedValue
     Long id;
     String name;
+    @Enumerated(EnumType.STRING)
     WalletType walletType;
     Currency currency;
     BigDecimal balance;

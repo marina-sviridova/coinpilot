@@ -1,9 +1,6 @@
 package com.coinpilot.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,12 +17,11 @@ import java.util.Currency;
 @AllArgsConstructor
 @Builder
 public class Transaction {
-
     @Id @GeneratedValue
     Long id;
-
     @ManyToOne
     Wallet wallet;
+    @Enumerated(EnumType.STRING)
     TransactionType type;
     BigDecimal amount;
     Currency currency;

@@ -5,6 +5,7 @@ import com.coinpilot.dto.WalletRequestDTO;
 import com.coinpilot.dto.WalletResponseDTO;
 import com.coinpilot.service.TransactionService;
 import com.coinpilot.service.WalletService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class WalletController {
     }
 
     @PostMapping("/wallets")
-    public ResponseEntity<WalletResponseDTO> createWallet(@RequestBody WalletRequestDTO walletRequestDTO) {
+    public ResponseEntity<WalletResponseDTO> createWallet(@Valid @RequestBody WalletRequestDTO walletRequestDTO) {
         return new ResponseEntity<>(walletService.createWallet(walletRequestDTO), HttpStatus.CREATED);
     }
 
@@ -34,7 +35,7 @@ public class WalletController {
     }
 
     @PutMapping("/wallets/{id}")
-    public ResponseEntity<WalletResponseDTO> updateWalletById(@PathVariable Long id, @RequestBody WalletRequestDTO walletRequestDTO) {
+    public ResponseEntity<WalletResponseDTO> updateWalletById(@PathVariable Long id, @Valid @RequestBody WalletRequestDTO walletRequestDTO) {
         return new ResponseEntity<>(walletService.updateWalletById(id, walletRequestDTO), HttpStatus.OK);
     }
 

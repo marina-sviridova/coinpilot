@@ -73,8 +73,8 @@ public class TransactionController {
     }
 
     @PutMapping("/transactions/{id}")
-    public ResponseEntity<TransactionResponseDTO> updateTransactionById(@Valid @PathVariable Long id,
-                                                                  @RequestBody TransactionRequestDTO transactionRequestDTO) {
+    public ResponseEntity<TransactionResponseDTO> updateTransactionById(@PathVariable Long id,
+                                                                  @Valid @RequestBody TransactionRequestDTO transactionRequestDTO) {
         return new ResponseEntity<>(transactionService.updateTransactionById(id, transactionRequestDTO), HttpStatus.OK);
     }
 
